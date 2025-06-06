@@ -1,0 +1,23 @@
+{
+  "name": "@slack/slack-bolt-sdk-cht-user-creator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A CHT user Creation bot using slack bolt ⚡️ SDK",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Alex Nyika <nomulex@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@slack/bolt": "^1.4.1",
+    "uuid": "^3.3.3",
+    "node-fetch": "^2.6.0",
+    "bluebird": "^3.7.1",
+    "url": "^0.11.0",
+    "https": "^1.0.0",
+    "moment": "^2.24.0",
+    "@sendgrid/mail": "^7.7.0"
+  }
+}
