@@ -1,4 +1,4 @@
-# Demo account slack both
+# Demo account slack bot
 
 Node app to listen to slack channel for requests for accounts on demo.dev.medcimobile.org:
 
