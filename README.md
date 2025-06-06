@@ -18,3 +18,55 @@ TK
 
 TK
 
+## Logs from Glitch
+
+This may be helpful in trying to bootstrap the app in a more modern environment like docker or EKS:
+
+
+```bash
+
+No Node version was specified; we are using default version 10. You can change this in package.json: https://help.glitch.com/hc/en-us/articles/16287495688845-Can-I-change-the-version-of-node-js-my-project-uses-
+
+node v10.24.1, npm 6.14.12
+Installing...
+audited 102 packages in 4.079s
+
+1 package is looking for funding
+  run `npm fund` for details
+
+found 35 vulnerabilities (6 low, 14 moderate, 15 high)
+  run `npm audit fix` to fix them, or `npm audit` for details
+
+Total install time: 11672ms
+🔼💮 ⚡️ Bolt app is running!
+
+No Node version was specified; we are using default version 10. You can change this in package.json: https://help.glitch.com/hc/en-us/articles/16287495688845-Can-I-change-the-version-of-node-js-my-project-uses-
+
+node v10.24.1, npm 6.14.12
+Installing...
+audited 102 packages in 3.383s
+
+1 package is looking for funding
+  run `npm fund` for details
+
+found 35 vulnerabilities (6 low, 14 moderate, 15 high)
+  run `npm audit fix` to fix them, or `npm audit` for details
+
+Total install time: 10879ms
+🎧🖤 ⚡️ Bolt app is running!
+
+No Node version was specified; we are using default version 10. You can change this in package.json: https://help.glitch.com/hc/en-us/articles/16287495688845-Can-I-change-the-version-of-node-js-my-project-uses-
+
+node v10.24.1, npm 6.14.12
+Installing...
+audited 102 packages in 3.383s
+
+1 package is looking for funding
+  run `npm fund` for details
+
+found 35 vulnerabilities (6 low, 14 moderate, 15 high)
+  run `npm audit fix` to fix them, or `npm audit` for details
+
+Total install time: 10879ms
+🥄🪝 ⚡️ Bolt app is running!
+```
