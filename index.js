@@ -15,14 +15,6 @@ const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
 const sgMail = require("@sendgrid/mail");
 
-function wait(ms) {
-  var start = new Date().getTime();
-  var end = start;
-  while (end < start + ms) {
-    end = new Date().getTime();
-  }
-}
-
 const relativeDateFields = [
   "lmp_date",
   "lmp_date_8601",
@@ -93,8 +85,8 @@ function createFamilies(contact_id) {
 }
 
 function postFamilies(user, parent) {
-  var timeoutCnt = 0;
-  for (var key in FAMILIES) {
+  let timeoutCnt = 0;
+  for (let key in FAMILIES) {
     if (!FAMILIES.hasOwnProperty(key)) {
       continue;
     }
@@ -108,7 +100,7 @@ function postFamilies(user, parent) {
           new family(parent, key),
           function (r, options) {
             if (r && r.id && r.id != "") {
-              for (var child in FAMILIES[options.family]) {
+              for (let child in FAMILIES[options.family]) {
                 if (!FAMILIES[options.family].hasOwnProperty(child)) {
                   continue;
                 }
@@ -122,7 +114,7 @@ function postFamilies(user, parent) {
                     child
                 );
 
-                var newPerson = new person(
+                let newPerson = new person(
                   r.id,
                   child,
                   FAMILIES[options.family][child].date_of_birth,
@@ -142,8 +134,8 @@ function postFamilies(user, parent) {
                       post(API + "places/" + r.id, new contact(r2.id));
                     }
                     // Post any related reports
-                    var forms = options.object.forms;
-                    for (var i in forms) {
+                    let forms = options.object.forms;
+                    for (let i in forms) {
                       console.error(
                         "Creating: " +
                           options.user.parent.name +
@@ -179,7 +171,7 @@ function postFamilies(user, parent) {
                         options.person.phone;
 
                       // Set reported date to ms since epoch if best guess is that value is # of days ago
-                      var reported_date = moment().subtract(
+                      let reported_date = moment().subtract(
                         forms[i].reported_date,
                         "days"
                       );
@@ -191,7 +183,7 @@ function postFamilies(user, parent) {
                         forms[i].reported_date = reported_date.valueOf();
                       }
 
-                      for (var j = 0; j < relativeDateFields.length; j++) {
+                      for (let j = 0; j < relativeDateFields.length; j++) {
                         if (forms[i].fields[relativeDateFields[j]]) {
                           forms[i].fields[relativeDateFields[j]] =
                             getRelativeDate(
@@ -255,14 +247,14 @@ function sendEmail(msg) {
 
 // HTTP FUNCTIONS
 function get(str_url, callback, callback_options) {
-  var options = url.parse(str_url);
+  let options = url.parse(str_url);
   options.method = "GET";
 
   request(options, null, callback, callback_options);
 }
 
 function post(str_url, json_data, callback, callback_options) {
-  var options = url.parse(str_url);
+  let options = url.parse(str_url);
   options.headers = { "content-type": "application/json" };
   options.method = "POST";
 
@@ -274,15 +266,15 @@ function request(options, data, callback, callback_options) {
   if (data) {
     log(JSON.stringify(data, null, 2));
   }
-  var req = https.request(options, function (res) {
+  let req = https.request(options, function (res) {
     res.setEncoding("utf8");
-    var body = "";
+    let body = "";
     res.on("data", function (d) {
       body += d;
     });
 
     res.on("end", function () {
-      var parsed = "";
+      let parsed = "";
       try {
         parsed = JSON.parse(body);
         log(
@@ -412,29 +404,22 @@ function slackUserCreate(name, email, say) {
 
   fetch(`${url}/places`, options)
     .then((res) => res.json())
-    .then((json) => {
-      //say(JSON.stringify(json));
-      //  say(`${area_json.name} created,  UUID:${json.id}`);
+    .then(() => {
       options.body = JSON.stringify(person_json);
       return fetch(`${url}/people`, options);
     })
     .then((res) => res.json())
-    .then((json) => {
-      //say(JSON.stringify(json));
-      // say(`${person_json.name} contact created  UUID:${json.id}`);
+    .then(() => {
       options.body = JSON.stringify(place_update_json);
       return fetch(`${url}/places/${area_uuid}`, options);
     })
     .then((res) => res.json())
-    .then((json) => {
-      //say(JSON.stringify(json));
-      // say(`Contact made parent of area`);
+    .then(() => {
       options.body = JSON.stringify(user_json);
       return fetch(`${url}/users`, options);
     })
     .then((res) => res.json())
-    .then((json) => {
-      //say(JSON.stringify(json));
+    .then(() => {
       createFamilies(person_uuid);
       say(
         `CHT demo account created! Username: ${user_name} Password: ${user_password}`
