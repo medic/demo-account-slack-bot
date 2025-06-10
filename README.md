@@ -28,7 +28,7 @@ Be sure it has the following perms:
 2. ensure you have node 22 
 3. cd into the repo 
 4. copy `env.example` to `.env` and populate secrets - careful about running produciton secrets so two emails aren't sent to end users!
-5. install dependencies `node ci`
+5. install dependencies `npm ci`
 6. run it `node --env-file=.env index.js`
 
 ## Production 
