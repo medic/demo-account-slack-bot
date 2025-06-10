@@ -447,13 +447,19 @@ function contactEmail(str) {
 }
 
 const app = new App({
-  signingSecret: process.env.SLACK_SIGNING_SECRET,
   token: process.env.SLACK_BOT_TOKEN,
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  socketMode: true,
+  appToken: process.env.SLACK_APP_TOKEN,
+  // Socket Mode doesn't listen on a port, but in case you want your app to respond to OAuth,
+  // you still need to listen on some port!
+  port: process.env.PORT || 3000
 });
 
 app.message(
   "please create a CHT demo account for the below",
   ({ message, say }) => {
+    app.logger.info(`app message please create a CHT demo account for the below`);
     let text = message.text.split("\n");
     let contact = text.find(contactName).replace("Name:", "").trim();
     let email = text.find(contactEmail).replace("Email:", "").trim();
@@ -467,27 +473,8 @@ app.message(
   }
 );
 
-app.message(
-  "create a CHT demo account for the below",
-  async ({ message, context }) => {
-    try {
-      // Call the "reactions.add" Web API method
-      const result = await app.client.reactions.add({
-        // Use token from context
-        token: context.botToken,
-        name: "white_check_mark",
-        channel: message.channel,
-        timestamp: message.ts,
-      });
-      console.log(result);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-);
-
 app.event("app_home_opened", ({ event, say }) => {
-  // Look up the user from DB
+  app.logger.info(`app event cht-app_home_opened-create`);
   let user = store.getUser(event.user);
 
   if (!user) {
@@ -505,10 +492,16 @@ app.event("app_home_opened", ({ event, say }) => {
   }
 });
 
+app.message('hello', async ({ message, say }) => {
+  await say(`Hey there <@${message.user}>!`);
+  app.logger.info(`Hey there <@${message.user}>!`);
+});
+
 app.command("/cht-user-create", async ({ command, ack, say }) => {
   // Acknowledge command request
-  ack();
+  await ack();
 
+  app.logger.info(`app command cht-user-create`);
   if (command.text.length) {
     say("Creating User...");
     try {
@@ -525,8 +518,7 @@ app.command("/cht-user-create", async ({ command, ack, say }) => {
   }
 });
 
-// Start your app
 (async () => {
-  await app.start(process.env.PORT || 3000);
-  console.log("⚡️ Bolt app is running!");
+  await app.start();
+  app.logger.info('⚡️ Bolt app is running!');
 })();
