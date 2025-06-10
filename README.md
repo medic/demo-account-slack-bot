@@ -7,7 +7,22 @@ Node app to listen to slack channel for requests for accounts on demo.dev.medcim
 3. This repositories  bot runs (originally on [Glitch](https://glitch.com/edit/#!/pattern-sulfur?path=index.js%3A334%3A112), see [#medic-infrastructure/issues/1170](https://github.com/medic/medic-infrastructure/issues/1170)), that listens to specific Slack messages or slash commands and creates a demo account in demo-cht.dev.medicmobile.org.
 4. This same bot sends An email is set to the person who submitted the form with their credentials for their demo account using Sendgrid
 
-## Development
+
+## Running 
+
+### Create a Slack app
+
+This is needed for both prod and dev.  Consider setting up two apps so you can easily test dev by switching out `SLACK_SIGNING_SECRET` and `SLACK_BOT_TOKEN`
+
+Follow the [Slack Bolt docs for creating an app](https://tools.slack.dev/bolt-js/getting-started#create-an-app). After you create the app, add it your channel by going to the app and clicking "Add BOT-NAME-HERE to a channel".  I could not get it to work by going to the channel and adding the app :shrug:
+
+Be sure it has the following perms:
+* chat:write
+* channels:history
+* groups:history
+* users:read
+
+### Development
 
 1. clone this repo
 2. ensure you have node 22 
@@ -16,10 +31,10 @@ Node app to listen to slack channel for requests for accounts on demo.dev.medcim
 5. install dependencies `node ci`
 6. run it `node --env-file=.env index.js`
 
-## Deployment
+## Production 
 
 1. clone the repo
-2. copy `env.example` to `.env` and populate secrets 
+2. copy `env.example` to `.env` and populate [secrets from 1pass](https://start.1password.com/open/i?a=FS6VLBPCXJGBTFO3LV4R74OA6E&v=3xw7qcbg2snbgpt3j25bljlmlm&i=lxb4dh4gc45tlvydyny7nomawa&h=medic.1password.com)
 3. run `docker compose up -d`
 
 ## Logs from Glitch
