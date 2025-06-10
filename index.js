@@ -1,6 +1,6 @@
 const { App } = require("@slack/bolt");
 const store = require("./store");
-const {v4 : uuidv4} = require('uuid');
+const uuidv4 = require("uuid/v4");
 const fetch = require("node-fetch");
 const Bluebird = require("bluebird");
 fetch.Promise = Bluebird;
@@ -14,6 +14,14 @@ const HOST = url.parse(
 const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
 const sgMail = require("@sendgrid/mail");
+
+function wait(ms) {
+  var start = new Date().getTime();
+  var end = start;
+  while (end < start + ms) {
+    end = new Date().getTime();
+  }
+}
 
 const relativeDateFields = [
   "lmp_date",
@@ -51,7 +59,7 @@ const relativeDateFields = [
 ];
 
 const log = function (text) {
-  app.logger.info(text);
+  console.log(text);
 };
 
 function family(parent, name, contact) {
@@ -85,27 +93,36 @@ function createFamilies(contact_id) {
 }
 
 function postFamilies(user, parent) {
-  let timeoutCnt = 0;
-  for (const key in FAMILIES) {
+  var timeoutCnt = 0;
+  for (var key in FAMILIES) {
     if (!FAMILIES.hasOwnProperty(key)) {
       continue;
     }
 
     setTimeout(
       function (key, timeoutCnt) {
-        log("Creating: " + user.parent.name + " > " + key);
+        console.error("Creating: " + user.parent.name + " > " + key);
 
         post(
           API + "places",
           new family(parent, key),
           function (r, options) {
             if (r && r.id && r.id != "") {
-              for (const child in FAMILIES[options.family]) {
+              for (var child in FAMILIES[options.family]) {
                 if (!FAMILIES[options.family].hasOwnProperty(child)) {
                   continue;
                 }
 
-                const newPerson = new person(
+                console.error(
+                  "Creating: " +
+                    options.user.parent.name +
+                    " > " +
+                    options.family +
+                    " > " +
+                    child
+                );
+
+                var newPerson = new person(
                   r.id,
                   child,
                   FAMILIES[options.family][child].date_of_birth,
@@ -125,8 +142,20 @@ function postFamilies(user, parent) {
                       post(API + "places/" + r.id, new contact(r2.id));
                     }
                     // Post any related reports
-                    const forms = options.object.forms;
-                    for (let i in forms) {
+                    var forms = options.object.forms;
+                    for (var i in forms) {
+                      console.error(
+                        "Creating: " +
+                          options.user.parent.name +
+                          " > " +
+                          options.family +
+                          " > " +
+                          options.person.name +
+                          " > " +
+                          forms[i].form
+                      );
+
+                      let xmloptions = { declaration: { include: false } };
 
                       if (!forms.hasOwnProperty(i)) {
                         continue;
@@ -150,7 +179,7 @@ function postFamilies(user, parent) {
                         options.person.phone;
 
                       // Set reported date to ms since epoch if best guess is that value is # of days ago
-                      const reported_date = moment().subtract(
+                      var reported_date = moment().subtract(
                         forms[i].reported_date,
                         "days"
                       );
@@ -162,7 +191,7 @@ function postFamilies(user, parent) {
                         forms[i].reported_date = reported_date.valueOf();
                       }
 
-                      for (let j = 0; j < relativeDateFields.length; j++) {
+                      for (var j = 0; j < relativeDateFields.length; j++) {
                         if (forms[i].fields[relativeDateFields[j]]) {
                           forms[i].fields[relativeDateFields[j]] =
                             getRelativeDate(
@@ -217,22 +246,23 @@ function sendEmail(msg) {
   sgMail
     .send(msg)
     .then(() => {
-      log("Email sent to: " + msg.to);
+      log("Email sent");
     })
     .catch((error) => {
       log(error);
     });
 }
 
+// HTTP FUNCTIONS
 function get(str_url, callback, callback_options) {
-  const options = url.parse(str_url);
+  var options = url.parse(str_url);
   options.method = "GET";
 
   request(options, null, callback, callback_options);
 }
 
 function post(str_url, json_data, callback, callback_options) {
-  const options = url.parse(str_url);
+  var options = url.parse(str_url);
   options.headers = { "content-type": "application/json" };
   options.method = "POST";
 
@@ -240,17 +270,31 @@ function post(str_url, json_data, callback, callback_options) {
 }
 
 function request(options, data, callback, callback_options) {
-  const req = https.request(options, function (res) {
+  log("*******************\n" + options.method + " " + options.href);
+  if (data) {
+    log(JSON.stringify(data, null, 2));
+  }
+  var req = https.request(options, function (res) {
     res.setEncoding("utf8");
-    let body = "";
+    var body = "";
     res.on("data", function (d) {
       body += d;
     });
 
     res.on("end", function () {
-      let parsed = "";
+      var parsed = "";
       try {
         parsed = JSON.parse(body);
+        log(
+          "===================\nSUCCESS " +
+            options.method +
+            " " +
+            options.href +
+            "\n" +
+            JSON.stringify(data, null, 2) +
+            "\nResponse:\n" +
+            JSON.stringify(parsed, null, 2)
+        );
       } catch (e) {
         log(
           "===================\nFAILED " +
@@ -262,6 +306,7 @@ function request(options, data, callback, callback_options) {
             "\nResponse:\n" +
             body
         );
+        console.error("Error: " + body);
       }
 
       // do callback with the server response
@@ -286,16 +331,16 @@ function request(options, data, callback, callback_options) {
 }
 
 function slackUserCreate(name, email, say) {
-  const url = `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@demo-cht.dev.medicmobile.org/api/v1`;
+  let url = `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@demo-cht.dev.medicmobile.org/api/v1`;
 
-  const area_uuid = uuidv4();
-  const names = name.split(" ");
+  let area_uuid = uuidv4();
+  let names = name.split(" ");
 
-  const area_json = {
+  let area_json = {
     imported_date: new Date().toISOString(),
     parent: process.env.PARENT_UUID,
     _id: area_uuid,
-    name: `${name} Area`,
+    name: `${names[0]} ${names[1]} Area`,
     type: "health_center",
     use_cases: "anc pnc imm",
     vaccines:
@@ -304,31 +349,32 @@ function slackUserCreate(name, email, say) {
 
   //say (JSON.stringify(area_json));
 
-  const person_uuid = uuidv4();
+  let person_uuid = uuidv4();
 
-  const person_json = {
+  let person_json = {
     imported_date: new Date().toISOString(),
     place: area_uuid,
     _id: person_uuid,
-    name: `${name}`,
+    name: `${names[0]} ${names[1]}`,
     email: `${email}`,
     type: "person",
   };
 
   // say (JSON.stringify(person_json));
 
-  const place_update_json = {
+  let place_update_json = {
     contact: person_uuid,
   };
 
-  const rand_end = Math.floor(Math.random() * (9999 - 1000) + 1000);
-  const user_password = "Health" + rand_end;
+  // say (JSON.stringify(place_update_json));
 
-  const user_name = `${names[0]
+  let user_password = "Health123";
+
+  let user_name = `${names[0]
     .substring(0, 1)
-    .toLowerCase()}${names[1].toLowerCase()}${rand_end}`;
+    .toLowerCase()}${names[1].toLowerCase()}`;
 
-  const user_json = {
+  let user_json = {
     username: user_name,
     password: user_password,
     type: "chw",
@@ -339,22 +385,24 @@ function slackUserCreate(name, email, say) {
     fullname: person_json.name,
   };
 
-  const from_email = "CHT Demo Account <info@communityhealthtoolkit.org>";
-  const to_email = email.substring(
+  //say (JSON.stringify(user_json));
+
+  const from_email = "info@communityhealthtoolkit.org";
+  let to_email = email.substring(
     email.lastIndexOf(":") + 1,
     email.lastIndexOf("|")
   );
-  const email_subject = "Your Community Health App Demo";
-  const email_body = `<div>Welcome to the Community Health Toolkit! To load your personal demo of a community health app built with our Core Framework, open the link below in Chrome or Firefox and enter your new username and password:</div><br><div>https://demo-cht.dev.medicmobile.org/ <br> username: ${user_name} <br> password: ${user_password}</div><br><div>It may take up to a minute for the app to load demo data, including sample families, people, history, and tasks. Once the tasks have populated, the app can run offline. Please note that the clinical protocols and guidance in the app are for demo purposes only. To explore tablet and mobile views, simply decrease the size of your browser window. </div><br><div><b>Join our community forum</b> at https://forum.communityhealthtoolkit.org/ to learn more about the CHT, ask us any questions, or tell us about your project!</div><br><div>Community Health Toolkit <br> www.communityhealthtoolkit.org</div><br>`;
+  let email_subject = "Your Community Health App Demo";
+  let email_body = `<div>Welcome to the Community Health Toolkit! To load your personal demo of a community health app built with our Core Framework, open the link below in Chrome or Firefox and enter your new username and password:</div><br><div>https://demo-cht.dev.medicmobile.org/ <br> username: ${user_name} <br> password: ${user_password}</div><br><div>It may take up to a minute for the app to load demo data, including sample families, people, history, and tasks. Once the tasks have populated, the app can run offline. Please note that the clinical protocols and guidance in the app are for demo purposes only. To explore tablet and mobile views, simply decrease the size of your browser window. </div><br><div><b>Join our community forum</b> at https://forum.communityhealthtoolkit.org/ to learn more about the CHT, ask us any questions, or tell us about your project!</div><br><div>Community Health Toolkit <br> www.communityhealthtoolkit.org</div><br>`;
 
-  const email_msg = {
+  let email_msg = {
     to: to_email,
     from: from_email,
     subject: email_subject,
     html: email_body,
   };
 
-  const options = {
+  let options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -364,22 +412,29 @@ function slackUserCreate(name, email, say) {
 
   fetch(`${url}/places`, options)
     .then((res) => res.json())
-    .then(() => {
+    .then((json) => {
+      //say(JSON.stringify(json));
+      //  say(`${area_json.name} created,  UUID:${json.id}`);
       options.body = JSON.stringify(person_json);
       return fetch(`${url}/people`, options);
     })
     .then((res) => res.json())
-    .then(() => {
+    .then((json) => {
+      //say(JSON.stringify(json));
+      // say(`${person_json.name} contact created  UUID:${json.id}`);
       options.body = JSON.stringify(place_update_json);
       return fetch(`${url}/places/${area_uuid}`, options);
     })
     .then((res) => res.json())
-    .then(() => {
+    .then((json) => {
+      //say(JSON.stringify(json));
+      // say(`Contact made parent of area`);
       options.body = JSON.stringify(user_json);
       return fetch(`${url}/users`, options);
     })
     .then((res) => res.json())
-    .then(() => {
+    .then((json) => {
+      //say(JSON.stringify(json));
       createFamilies(person_uuid);
       say(
         `CHT demo account created! Username: ${user_name} Password: ${user_password}`
@@ -407,23 +462,18 @@ function contactEmail(str) {
 }
 
 const app = new App({
-  token: process.env.SLACK_BOT_TOKEN,
   signingSecret: process.env.SLACK_SIGNING_SECRET,
-  socketMode: true,
-  appToken: process.env.SLACK_APP_TOKEN,
-  // Socket Mode doesn't listen on a port, but in case you want your app to respond to OAuth,
-  // you still need to listen on some port!
-  port: process.env.PORT || 3000
+  token: process.env.SLACK_BOT_TOKEN,
 });
 
 app.message(
   "please create a CHT demo account for the below",
   ({ message, say }) => {
-    const text = message.text.split("\n");
-    const contact = text.find(contactName).replace("Name:", "").trim();
-    const email = text.find(contactEmail).replace("Email:", "").trim();
+    let text = message.text.split("\n");
+    let contact = text.find(contactName).replace("Name:", "").trim();
+    let email = text.find(contactEmail).replace("Email:", "").trim();
 
-    app.logger.info('app message please create a CHT demo account for the below', contact,email);
+    //  say(`Creating User login for ${contact}`);
     try {
       slackUserCreate(contact, email, say);
     } catch (error) {
@@ -432,9 +482,28 @@ app.message(
   }
 );
 
+app.message(
+  "create a CHT demo account for the below",
+  async ({ message, context }) => {
+    try {
+      // Call the "reactions.add" Web API method
+      const result = await app.client.reactions.add({
+        // Use token from context
+        token: context.botToken,
+        name: "white_check_mark",
+        channel: message.channel,
+        timestamp: message.ts,
+      });
+      console.log(result);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+);
+
 app.event("app_home_opened", ({ event, say }) => {
-  app.logger.info(`app event cht-app_home_opened-create`);
-  const user = store.getUser(event.user);
+  // Look up the user from DB
+  let user = store.getUser(event.user);
 
   if (!user) {
     user = {
@@ -451,21 +520,15 @@ app.event("app_home_opened", ({ event, say }) => {
   }
 });
 
-app.message('hello', async ({ message, say }) => {
-  await say(`Hey there <@${message.user}>!`);
-  app.logger.info(`Hey there <@${message.user}>!`);
-});
-
 app.command("/cht-user-create", async ({ command, ack, say }) => {
   // Acknowledge command request
-  await ack();
+  ack();
 
-  app.logger.info(`app command cht-user-create`);
   if (command.text.length) {
     say("Creating User...");
     try {
-      const params = command.text.split(" ");
-      const name = `${params[0]} ${params[1]}`;
+      let params = command.text.split(" ");
+      let name = `${params[0]} ${params[1]}`;
       slackUserCreate(name, params[2], say);
     } catch (error) {
       say(error);
@@ -477,7 +540,8 @@ app.command("/cht-user-create", async ({ command, ack, say }) => {
   }
 });
 
+// Start your app
 (async () => {
-  await app.start();
-  log('⚡️ Bolt app is running!');
+  await app.start(process.env.PORT || 3000);
+  console.log("⚡️ Bolt app is running!");
 })();
