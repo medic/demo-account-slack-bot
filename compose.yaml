@@ -11,4 +11,4 @@ services:
     command:
       - |
         npm ci
-        node --env-file=.env index.js
+        npm run start

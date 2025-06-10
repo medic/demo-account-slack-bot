@@ -1,6 +1,6 @@
 const { App } = require("@slack/bolt");
 const store = require("./store");
-const uuidv4 = require("uuid/v4");
+const {v4 : uuidv4} = require('uuid');
 const fetch = require("node-fetch");
 const Bluebird = require("bluebird");
 fetch.Promise = Bluebird;
@@ -339,7 +339,7 @@ function slackUserCreate(name, email, say) {
     fullname: person_json.name,
   };
 
-  const from_email = "info@communityhealthtoolkit.org";
+  const from_email = "CHT Demo Account <info@communityhealthtoolkit.org>";
   const to_email = email.substring(
     email.lastIndexOf(":") + 1,
     email.lastIndexOf("|")

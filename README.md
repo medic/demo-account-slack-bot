@@ -12,7 +12,7 @@ Node app to listen to slack channel for requests for accounts on demo.dev.medcim
 
 ### Create a Slack app
 
-This is needed for both prod and dev.  Consider setting up two apps so you can easily test dev by switching out `SLACK_SIGNING_SECRET` and `SLACK_BOT_TOKEN`
+This is needed for both prod and dev.  Consider setting up two Slack apps so you can easily test dev by switching out `SLACK_SIGNING_SECRET`, `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN` and having each app point to a different channel in slack.
 
 Follow the [Slack Bolt docs for creating an app](https://tools.slack.dev/bolt-js/getting-started#create-an-app). After you create the app, add it your channel by going to the app and clicking "Add BOT-NAME-HERE to a channel".  I could not get it to work by going to the channel and adding the app :shrug:
 
@@ -27,9 +27,9 @@ Be sure it has the following perms:
 1. clone this repo
 2. ensure you have node 22 
 3. cd into the repo 
-4. copy `env.example` to `.env` and populate secrets - careful about running produciton secrets so two emails aren't sent to end users!
+4. copy `env.example` to `.env` and populate secrets - using demo [secrets from 1pass](https://start.1password.com/open/i?a=FS6VLBPCXJGBTFO3LV4R74OA6E&v=v3osjt24pw5ngyirgee7hub56u&i=wzcncuy5igsmg6hbl7hpclrzoa&h=medic.1password.com)
 5. install dependencies `npm ci`
-6. run it `node --env-file=.env index.js`
+6. run it `npm run start`
 
 ## Production 
 
