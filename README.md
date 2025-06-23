@@ -5,7 +5,7 @@ Node app to listen to slack channel for requests for accounts on demo.dev.medcim
 1. Person submits form on [contact page](https://communityhealthtoolkit.org/contact) requesting  a demo account 
 2. A Slack message is sent in #cht-demo-setup Slack channel from Squarespace through Zapier
 3. This repositories  bot runs (originally on [Glitch](https://glitch.com/edit/#!/pattern-sulfur?path=index.js%3A334%3A112), see [#medic-infrastructure/issues/1170](https://github.com/medic/medic-infrastructure/issues/1170)), that listens to specific Slack messages or slash commands and creates a demo account in demo-cht.dev.medicmobile.org.
-4. This same bot sends An email is set to the person who submitted the form with their credentials for their demo account using Sendgrid
+4. This same bot sends an email to the person who submitted the form with their credentials for their demo account using Sendgrid
 
 
 ## Running 
