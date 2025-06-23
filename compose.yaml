@@ -1,0 +1,14 @@
+services:
+  node:
+    image: "node:22-alpine"
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./:/home/node/app
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        npm ci
+        npm run start
