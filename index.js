@@ -451,11 +451,6 @@ app.event("app_home_opened", ({ event, say }) => {
   }
 });
 
-app.message('hello', async ({ message, say }) => {
-  await say(`Hey there <@${message.user}>!`);
-  app.logger.info(`Hey there <@${message.user}>!`);
-});
-
 app.command("/cht-user-create", async ({ command, ack, say }) => {
   // Acknowledge command request
   await ack();
