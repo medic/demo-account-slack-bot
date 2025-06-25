@@ -22,6 +22,13 @@ Be sure it has the following perms:
 * groups:history
 * users:read
 
+As well, be sure to enable socket for the app:
+
+1. go to the [Slack API Page](https://api.slack.com/apps)
+2. click on your app
+3. go to "Socket Mode"
+4. make sure "Enable Socket Mode" is enabled
+
 ### Development
 
 1. clone this repo
