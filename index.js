@@ -13,7 +13,7 @@ const HOST = url.parse(
 );
 const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
-const sgMail = require("@sendgrid/mail");
+const nodemailer = require("nodemailer");
 
 const relativeDateFields = [
   "lmp_date",
@@ -213,15 +213,34 @@ function validateEmail(email) {
 }
 
 function sendEmail(msg) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  sgMail
-    .send(msg)
-    .then(() => {
-      log("Email sent to: " + msg.to);
-    })
-    .catch((error) => {
-      log(error);
+  let transporter = nodemailer.createTransport({})
+  try {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_URL,
+      port: process.env.SMTP_PORT,
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
     });
+  } catch (e) {
+    log(e);
+  }
+
+  try {
+    (async () => {
+      const info = await transporter.sendMail({
+        from: msg.from,
+        to: msg.to,
+        subject: msg.subject,
+        html: msg.html, // HTML body
+      });
+      log("Email sent to: " + msg.to + "  Message ID: " + info.messageId);
+    })();
+  } catch (e) {
+    log(e);
+  }
 }
 
 function get(str_url, callback, callback_options) {
