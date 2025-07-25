@@ -73,8 +73,8 @@ BODY:
 
 To update the service when there's code changes, first commit them to this repo.  Then SSH to where docker is running and run:
 1. `docker compose down -v # stops service and deletes any ephemeral data`
-2. `docker compose pull # updates node:22-alpine image`
-3. `git pull origin main # pulls in latest code`
+2. `git pull origin main # pulls in latest code`
+3. `docker compose pull # updates node:22-alpine image`
 4. `docker compose up -d # starts service in the background`
 5. `docker logs -f demo-account-slack-bot-node-1 # optional call to check logs - ctrl + c to exit when done`
 
