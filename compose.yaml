@@ -5,7 +5,7 @@ services:
     build:
       context: .
     volumes:
-      - ./.env:/home/node/app/.env
+      - ./.env:/home/node/app/.env:ro
     environment:
       - NODE_ENV=production
     restart: unless-stopped
