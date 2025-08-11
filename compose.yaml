@@ -1,15 +1,11 @@
 services:
   node:
-    image: "node:22-alpine"
-    user: "node"
-    working_dir: /home/node/app
+    # upon code changes, increment version so image is rebuilt
+    image: medic-demo-account-slack-bot:1.0
+    build:
+      context: .
+    volumes:
+      - ./.env:/home/node/app/.env:ro
     environment:
       - NODE_ENV=production
-    volumes:
-      - ./:/home/node/app
-    entrypoint: ["/bin/sh","-c"]
     restart: unless-stopped
-    command:
-      - |
-        npm ci
-        npm run start

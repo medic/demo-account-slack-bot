@@ -63,6 +63,15 @@ BODY:
     Good job
 ```
 
+### Releasing a new version 
+
+To ensure the docker image gets rebuilt when new code is released, be sure to update the `image` value in the `compose.yaml` [file](https://github.com/medic/demo-account-slack-bot/blob/main/compose.yaml). So if you were on version `1.0` and released a new version, you would change the line to be `1.1` like so:
+
+```yaml
+   image: medic-demo-account-slack-bot:1.1
+```
+
+
 ## Production 
 
 1. clone the repo: `git clone https://github.com/medic/demo-account-slack-bot.git`
@@ -71,12 +80,18 @@ BODY:
 
 ### Updates
 
+#### Code
+
 To update the service when there's code changes, first commit them to this repo.  Then SSH to where docker is running and run:
 1. `docker compose down -v # stops service and deletes any ephemeral data`
-2. `git pull origin main # pulls in latest code`
-3. `docker compose pull # updates node:22-alpine image`
-4. `docker compose up -d # starts service in the background`
+2. `git pull origin main # pulls in latest code from github`
+3. `docker pull node:22-alpine # updates node image`
+4. `docker compose up -d # starts service in the background, optionally rebuilding the local cached image if need be`
 5. `docker logs -f demo-account-slack-bot-node-1 # optional call to check logs - ctrl + c to exit when done`
+
+#### Config
+
+All configuration is stored in the `.env` file.  If you need to make configuration changes, edit the `.env` file.  Then run `docker compose restart` to make the changes take effect.
 
 ## Logs from Glitch
 
