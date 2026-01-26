@@ -92,8 +92,6 @@ function postFamilies(user, parent) {
 
     setTimeout(
       function (key, timeoutCnt) {
-        log("Creating: " + user.parent.name + " > " + key);
-
         post(
           API + "places",
           new family(parent, key),
@@ -396,14 +394,14 @@ function slackUserCreate(name, email) {
     .then((res) => res.json())
     .then(() => {
       createFamilies(person_uuid);
+      console.log('');
       console.log(
-        `CHT demo account created! Username: ${user_name} Password: ${user_password}`
+        `CHT demo account created! Name: ${name} Username: ${user_name} Password: ${user_password}`
       );
     })
     .then((res) => {
       if (validateEmail(to_email)) {
         sendEmail(email_msg);
-        console.log(`CHT demo account Email sent to ${to_email}!`);
       } else {
         log("Invalid Email");
       }
