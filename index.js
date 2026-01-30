@@ -432,7 +432,20 @@ const app = new App({
   appToken: process.env.SLACK_APP_TOKEN,
   // Socket Mode doesn't listen on a port, but in case you want your app to respond to OAuth,
   // you still need to listen on some port!
-  port: process.env.PORT || 3000
+  port: process.env.PORT || 3000,
+  customRoutes: [
+    {
+      path: '/health-check',
+      method: ['GET'],
+      handler: (req, res) => {
+        res.writeHead(200);
+        res.end(`OK`);
+      },
+    },
+  ],
+  installerOptions: {
+    port: 4000,
+  },
 });
 
 app.message(

@@ -1,7 +1,7 @@
 services:
   node:
     # upon code changes, increment version so image is rebuilt
-    image: medic-demo-account-slack-bot:1.0
+    image: medic-demo-account-slack-bot:1.1
     build:
       context: .
     volumes:
@@ -9,3 +9,5 @@ services:
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+    ports:
+      - "172.17.0.1:4000:4000"
