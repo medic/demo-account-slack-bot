@@ -444,7 +444,7 @@ const app = new App({
     },
   ],
   installerOptions: {
-    port: 4000,
+    port: process.env.HEALTH_CHECK_PORT || 4000,
   },
 });
 
