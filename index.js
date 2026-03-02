@@ -8,9 +8,8 @@ const https = require("https");
 const url = require("url");
 const moment = require("moment");
 const FAMILIES = require("./families.json");
-const HOST = url.parse(
-  `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@demo-cht.dev.medicmobile.org`
-);
+const RAW_HOST = `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@${process.env.MEDIC_INSTANCE}`
+const HOST = url.parse(RAW_HOST);
 const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
 const nodemailer = require("nodemailer");
@@ -305,7 +304,7 @@ function request(options, data, callback, callback_options) {
 }
 
 function slackUserCreate(name, email, say) {
-  const url = `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@demo-cht.dev.medicmobile.org/api/v1`;
+  const url = `${RAW_HOST}/api/v1`;
 
   const area_uuid = uuidv4();
   const names = name.split(" ");
@@ -438,8 +437,25 @@ const app = new App({
       path: '/health-check',
       method: ['GET'],
       handler: (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('OK');
+        res
+          .writeHead(200, { 'Content-Type': 'text/plain' })
+          .end('OK');
+      },
+    },
+    {
+      path: '/cht-user-create-test/:password',
+      method: ['POST'],
+      handler: (req, res) => {
+        if (req.params.password === process.env.TEST_PASSWORD) {
+          slackUserCreate(process.env.TEST_NAME, process.env.TEST_EMAIL, function(){});
+          res
+            .writeHead(200, { 'Content-Type': 'text/plain' })
+            .end(`Test user request sent`);
+        } else {
+          res
+            .writeHead(401, { 'Content-Type': 'text/plain' })
+            .end(`Unauthorized`);
+        }
       },
     },
   ],
