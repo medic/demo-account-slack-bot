@@ -14,6 +14,7 @@ const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
 const nodemailer = require("nodemailer");
 const TEST_SECRET = uuidv4();
+const TEST_EMAIL = `<mailto:${process.env.TEST_EMAIL}|${process.env.TEST_EMAIL}>`
 
 const relativeDateFields = [
   "lmp_date",
@@ -52,6 +53,9 @@ const relativeDateFields = [
 
 const log = function (text) {
   app.logger.info(text);
+};
+const warn = function (text) {
+  app.logger.warn(text);
 };
 
 function family(parent, name, contact) {
@@ -93,7 +97,7 @@ function postFamilies(user, parent) {
 
     setTimeout(
       function (key, timeoutCnt) {
-        log("Creating: " + user.parent.name + " > " + key);
+        log("Creating: " + key);
 
         post(
           API + "places",
@@ -304,6 +308,21 @@ function request(options, data, callback, callback_options) {
   req.end();
 }
 
+const fetchRetry = (url, options = {}, retries = 3) =>
+    fetch(url, options)
+        .then((res) => {
+          if (res.ok) {
+            return res;
+          }
+          if (retries > 1) {
+            warn(`Failed to get 200, instead got HTTP` +
+                  ` ${res.status} and retry count is ${retries} - trying again!`);
+            return fetchRetry(url, options, retries - 1);
+          }
+          throw new Error(res.status);
+        })
+        .catch((error) => console.error(error.message))
+
 function slackUserCreate(name, email, say) {
   const url = `${RAW_HOST}/api/v1`;
 
@@ -381,21 +400,6 @@ function slackUserCreate(name, email, say) {
     body: JSON.stringify(area_json),
   };
 
-  const fetchRetry = (url, options = {}, retries = 3) =>
-      fetch(url, options)
-          .then((res) => {
-            if (res.ok) {
-              return res;
-            }
-            if (retries > 1) {
-              console.log("Failed to get 200, instead got HTTP", res.status, "and retry count is", retries, "- trying again!");
-              return fetchRetry(url, options, retries - 1);
-            }
-            throw new Error(res.status);
-          })
-          .catch((error) => console.error(error.message))
-
-
   fetchRetry(`${url}/places`, options)
     .then((res) => res.json())
     .then(() => {
@@ -424,7 +428,7 @@ function slackUserCreate(name, email, say) {
         sendEmail(email_msg);
         say(`CHT demo account Email sent to ${to_email}!`);
       } else {
-        log("Invalid Email");
+        log(`Invalid Email: ${to_email}`);
       }
     })
     .catch(function (error) {
@@ -459,12 +463,12 @@ const app = new App({
       },
     },
     {
-      path: '/cht-user-create-test/:password',
+      path: '/cht-user-create-test/:test_secret',
       method: ['POST'],
       handler: (req, res) => {
-        if (req.params.password === TEST_SECRET) {
-          log("Received test request");
-          slackUserCreate(process.env.TEST_NAME, process.env.TEST_EMAIL, function(){});
+        if (req.params.test_secret === TEST_SECRET) {
+          log("Received test request" +  process.env.TEST_NAME + " - " +  process.env.TEST_EMAIL);
+          slackUserCreate(process.env.TEST_NAME, TEST_EMAIL, function(){});
           res
             .writeHead(200, { 'Content-Type': 'text/plain' })
             .end(`Test user request sent`);
