@@ -13,6 +13,7 @@ const HOST = url.parse(RAW_HOST);
 const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
 const nodemailer = require("nodemailer");
+const TEST_SECRET = uuidv4();
 
 const relativeDateFields = [
   "lmp_date",
@@ -380,21 +381,36 @@ function slackUserCreate(name, email, say) {
     body: JSON.stringify(area_json),
   };
 
-  fetch(`${url}/places`, options)
+  const fetchRetry = (url, options = {}, retries = 3) =>
+      fetch(url, options)
+          .then((res) => {
+            if (res.ok) {
+              return res;
+            }
+            if (retries > 1) {
+              console.log("Failed to get 200, instead got HTTP", res.status, "and retry count is", retries, "- trying again!");
+              return fetchRetry(url, options, retries - 1);
+            }
+            throw new Error(res.status);
+          })
+          .catch((error) => console.error(error.message))
+
+
+  fetchRetry(`${url}/places`, options)
     .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(person_json);
-      return fetch(`${url}/people`, options);
+      return fetchRetry(`${url}/people`, options);
     })
     .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(place_update_json);
-      return fetch(`${url}/places/${area_uuid}`, options);
+      return fetchRetry(`${url}/places/${area_uuid}`, options);
     })
     .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(user_json);
-      return fetch(`${url}/users`, options);
+      return fetchRetry(`${url}/users`, options);
     })
     .then((res) => res.json())
     .then(() => {
@@ -446,7 +462,8 @@ const app = new App({
       path: '/cht-user-create-test/:password',
       method: ['POST'],
       handler: (req, res) => {
-        if (req.params.password === process.env.TEST_PASSWORD) {
+        if (req.params.password === TEST_SECRET) {
+          log("Received test request");
           slackUserCreate(process.env.TEST_NAME, process.env.TEST_EMAIL, function(){});
           res
             .writeHead(200, { 'Content-Type': 'text/plain' })
@@ -523,4 +540,6 @@ app.command("/cht-user-create", async ({ command, ack, say }) => {
 (async () => {
   await app.start();
   log('⚡️ Bolt app is running!');
+  log(`Secret test URL - this changes every start:\n\n`
+      + `  curl -X POST http://localhost:4000/cht-user-create-test/${TEST_SECRET}\n`);
 })();
