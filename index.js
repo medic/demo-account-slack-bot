@@ -312,7 +312,7 @@ const fetchRetry = (url, options = {}, retries = 3) =>
     fetch(url, options)
         .then((res) => {
           if (res.ok) {
-            return res;
+      return res.json();
           }
           if (retries > 1) {
             warn(`Failed to get 200, instead got HTTP` +
