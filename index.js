@@ -320,8 +320,7 @@ const fetchRetry = (url, options = {}, retries = 3) =>
             return fetchRetry(url, options, retries - 1);
           }
           throw new Error(res.status);
-        })
-        .catch((error) => console.error(error.message))
+        });
 
 function slackUserCreate(name, email, say) {
   const url = `${RAW_HOST}/api/v1`;
@@ -383,7 +382,7 @@ function slackUserCreate(name, email, say) {
     email.lastIndexOf("|")
   );
   const email_subject = "Your Community Health App Demo";
-  const email_body = `<div>Welcome to the Community Health Toolkit! To load your personal demo of a community health app built with our Core Framework, open the link below in Chrome or Firefox and enter your new username and password:</div><br><div>https://demo-cht.dev.medicmobile.org/ <br> username: ${user_name} <br> password: ${user_password}</div><br><div>It may take up to a minute for the app to load demo data, including sample families, people, history, and tasks. Once the tasks have populated, the app can run offline. Please note that the clinical protocols and guidance in the app are for demo purposes only. To explore tablet and mobile views, simply decrease the size of your browser window. </div><br><div><b>Join our community forum</b> at https://forum.communityhealthtoolkit.org/ to learn more about the CHT, ask us any questions, or tell us about your project!</div><br><div>Community Health Toolkit <br> www.communityhealthtoolkit.org</div><br>`;
+  const email_body = `<div>Welcome to the Community Health Toolkit! To load your personal demo of a community health app built with our Core Framework, open the link below in Chrome or Firefox and enter your new username and password:</div><br><div>https://${process.env.MEDIC_INSTANCE} <br> username: ${user_name} <br> password: ${user_password}</div><br><div>It may take up to a minute for the app to load demo data, including sample families, people, history, and tasks. Once the tasks have populated, the app can run offline. Please note that the clinical protocols and guidance in the app are for demo purposes only. To explore tablet and mobile views, simply decrease the size of your browser window. </div><br><div><b>Join our community forum</b> at https://forum.communityhealthtoolkit.org/ to learn more about the CHT, ask us any questions, or tell us about your project!</div><br><div>Community Health Toolkit <br> www.communityhealthtoolkit.org</div><br>`;
 
   const email_msg = {
     to: to_email,
@@ -401,22 +400,18 @@ function slackUserCreate(name, email, say) {
   };
 
   fetchRetry(`${url}/places`, options)
-    .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(person_json);
       return fetchRetry(`${url}/people`, options);
     })
-    .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(place_update_json);
       return fetchRetry(`${url}/places/${area_uuid}`, options);
     })
-    .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(user_json);
       return fetchRetry(`${url}/users`, options);
     })
-    .then((res) => res.json())
     .then(() => {
       createFamilies(person_uuid);
       say(
