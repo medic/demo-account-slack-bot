@@ -38,7 +38,47 @@ As well, be sure to enable socket for the app:
 5. install dependencies `npm ci`
 6. run it `npm run start`
 
-### Testing SMTP
+#### Testing Slack
+
+In the `#demo-account-testing` [channel](https://medic.slack.com/archives/C06S8FGL55X/p1713292431645859?thread_ts=1713290993.631819&cid=C06S8FGL55X) , you can paste the following code to trigger the bot.  This is the slowest, noisiest way to test, but is a full e2e test. Replace test values with your own:
+
+```shell
+Hello - please create a CHT demo account for the below:
+
+Name: test-ignore test-ignore2222
+Email: testing@example.org
+Demo sign up: Yes
+```
+
+You should get back something like:
+
+```shell
+CHT demo account created! Username: ttest641 Password: Pass1235
+CHT demo account Email sent to testore@medic.org!
+```
+
+
+#### Testing Locally
+
+To avoid the round trip via Slack, you can test locally by calling the `/cht-user-create-test` endpoint.  Each time the server starts it will generate a new, secret URL to use based on a UUID.  For example:
+
+```shell
+[INFO]  bolt-app ⚡️ Bolt app is running!
+[INFO]  bolt-app Secret test URL - this changes every start:
+
+  curl -X POST http://localhost:4000/cht-user-create-test/a16676a8-c135-4d73-aa9a-d00cce931343
+```
+
+And then the test `curl` call looks like:
+
+```shell
+curl -X POST http://localhost:4000/cht-user-create-test/a16676a8-c135-4d73-aa9a-d00cce931343
+Test user request sent
+```
+
+This will use the `TEST_NAME` and `TEST_EMAIL` from your `.env` file.
+
+#### Testing SMTP
 
 Make sure `.env` file has correct values and run test script. For example to email `mrjones@medic.org` (but use your email!):
 
@@ -75,7 +115,7 @@ To ensure the docker image gets rebuilt when new code is released, be sure to up
 ## Production 
 
 1. clone the repo: `git clone https://github.com/medic/demo-account-slack-bot.git`
-2. copy `env.example` to `.env` and populate produciton [secrets from 1pass](https://start.1password.com/open/i?a=FS6VLBPCXJGBTFO3LV4R74OA6E&v=3xw7qcbg2snbgpt3j25bljlmlm&i=lxb4dh4gc45tlvydyny7nomawa&h=medic.1password.com)
+2. copy `env.example` to `.env` and populate production [secrets from 1pass](https://start.1password.com/open/i?a=FS6VLBPCXJGBTFO3LV4R74OA6E&v=3xw7qcbg2snbgpt3j25bljlmlm&i=lxb4dh4gc45tlvydyny7nomawa&h=medic.1password.com)
 3. run `docker compose up -d`
 
 ### Updates
@@ -92,56 +132,3 @@ To update the service when there's code changes, first commit them to this repo.
 #### Config
 
 All configuration is stored in the `.env` file.  If you need to make configuration changes, edit the `.env` file.  Then run `docker compose restart` to make the changes take effect.
-
-## Logs from Glitch
-
-This may be helpful in trying to bootstrap the app in a more modern environment like docker or EKS:
-
-
-```bash
-
-No Node version was specified; we are using default version 10. You can change this in package.json: https://help.glitch.com/hc/en-us/articles/16287495688845-Can-I-change-the-version-of-node-js-my-project-uses-
-
-node v10.24.1, npm 6.14.12
-Installing...
-audited 102 packages in 4.079s
-
-1 package is looking for funding
-  run `npm fund` for details
-
-found 35 vulnerabilities (6 low, 14 moderate, 15 high)
-  run `npm audit fix` to fix them, or `npm audit` for details
-
-Total install time: 11672ms
-🔼💮 ⚡️ Bolt app is running!
-
-No Node version was specified; we are using default version 10. You can change this in package.json: https://help.glitch.com/hc/en-us/articles/16287495688845-Can-I-change-the-version-of-node-js-my-project-uses-
-
-node v10.24.1, npm 6.14.12
-Installing...
-audited 102 packages in 3.383s
-
-1 package is looking for funding
-  run `npm fund` for details
-
-found 35 vulnerabilities (6 low, 14 moderate, 15 high)
-  run `npm audit fix` to fix them, or `npm audit` for details
-
-Total install time: 10879ms
-🎧🖤 ⚡️ Bolt app is running!
-
-No Node version was specified; we are using default version 10. You can change this in package.json: https://help.glitch.com/hc/en-us/articles/16287495688845-Can-I-change-the-version-of-node-js-my-project-uses-
-
-node v10.24.1, npm 6.14.12
-Installing...
-audited 102 packages in 3.383s
-
-1 package is looking for funding
-  run `npm fund` for details
-
-found 35 vulnerabilities (6 low, 14 moderate, 15 high)
-  run `npm audit fix` to fix them, or `npm audit` for details
-
-Total install time: 10879ms
-🥄🪝 ⚡️ Bolt app is running!
-```

@@ -8,12 +8,13 @@ const https = require("https");
 const url = require("url");
 const moment = require("moment");
 const FAMILIES = require("./families.json");
-const HOST = url.parse(
-  `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@demo-cht.dev.medicmobile.org`
-);
+const RAW_HOST = `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@${process.env.MEDIC_INSTANCE}`
+const HOST = url.parse(RAW_HOST);
 const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
 const nodemailer = require("nodemailer");
+const TEST_SECRET = uuidv4();
+const TEST_EMAIL = `<mailto:${process.env.TEST_EMAIL}|${process.env.TEST_EMAIL}>`
 
 const relativeDateFields = [
   "lmp_date",
@@ -52,6 +53,9 @@ const relativeDateFields = [
 
 const log = function (text) {
   app.logger.info(text);
+};
+const warn = function (text) {
+  app.logger.warn(text);
 };
 
 function family(parent, name, contact) {
@@ -93,7 +97,7 @@ function postFamilies(user, parent) {
 
     setTimeout(
       function (key, timeoutCnt) {
-        log("Creating: " + user.parent.name + " > " + key);
+        log("Creating: " + key);
 
         post(
           API + "places",
@@ -304,8 +308,22 @@ function request(options, data, callback, callback_options) {
   req.end();
 }
 
+const fetchRetry = (url, options = {}, retries = 3) =>
+    fetch(url, options)
+        .then((res) => {
+          if (res.ok) {
+      return res.json();
+          }
+          if (retries > 1) {
+            warn(`Failed to get 200, instead got HTTP` +
+                  ` ${res.status} and retry count is ${retries} - trying again!`);
+            return fetchRetry(url, options, retries - 1);
+          }
+          throw new Error(res.status);
+        });
+
 function slackUserCreate(name, email, say) {
-  const url = `https://${process.env.MEDIC_USER}:${process.env.MEDIC_PASSWORD}@demo-cht.dev.medicmobile.org/api/v1`;
+  const url = `${RAW_HOST}/api/v1`;
 
   const area_uuid = uuidv4();
   const names = name.split(" ");
@@ -364,7 +382,7 @@ function slackUserCreate(name, email, say) {
     email.lastIndexOf("|")
   );
   const email_subject = "Your Community Health App Demo";
-  const email_body = `<div>Welcome to the Community Health Toolkit! To load your personal demo of a community health app built with our Core Framework, open the link below in Chrome or Firefox and enter your new username and password:</div><br><div>https://demo-cht.dev.medicmobile.org/ <br> username: ${user_name} <br> password: ${user_password}</div><br><div>It may take up to a minute for the app to load demo data, including sample families, people, history, and tasks. Once the tasks have populated, the app can run offline. Please note that the clinical protocols and guidance in the app are for demo purposes only. To explore tablet and mobile views, simply decrease the size of your browser window. </div><br><div><b>Join our community forum</b> at https://forum.communityhealthtoolkit.org/ to learn more about the CHT, ask us any questions, or tell us about your project!</div><br><div>Community Health Toolkit <br> www.communityhealthtoolkit.org</div><br>`;
+  const email_body = `<div>Welcome to the Community Health Toolkit! To load your personal demo of a community health app built with our Core Framework, open the link below in Chrome or Firefox and enter your new username and password:</div><br><div>https://${process.env.MEDIC_INSTANCE} <br> username: ${user_name} <br> password: ${user_password}</div><br><div>It may take up to a minute for the app to load demo data, including sample families, people, history, and tasks. Once the tasks have populated, the app can run offline. Please note that the clinical protocols and guidance in the app are for demo purposes only. To explore tablet and mobile views, simply decrease the size of your browser window. </div><br><div><b>Join our community forum</b> at https://forum.communityhealthtoolkit.org/ to learn more about the CHT, ask us any questions, or tell us about your project!</div><br><div>Community Health Toolkit <br> www.communityhealthtoolkit.org</div><br>`;
 
   const email_msg = {
     to: to_email,
@@ -381,23 +399,19 @@ function slackUserCreate(name, email, say) {
     body: JSON.stringify(area_json),
   };
 
-  fetch(`${url}/places`, options)
-    .then((res) => res.json())
+  fetchRetry(`${url}/places`, options)
     .then(() => {
       options.body = JSON.stringify(person_json);
-      return fetch(`${url}/people`, options);
+      return fetchRetry(`${url}/people`, options);
     })
-    .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(place_update_json);
-      return fetch(`${url}/places/${area_uuid}`, options);
+      return fetchRetry(`${url}/places/${area_uuid}`, options);
     })
-    .then((res) => res.json())
     .then(() => {
       options.body = JSON.stringify(user_json);
-      return fetch(`${url}/users`, options);
+      return fetchRetry(`${url}/users`, options);
     })
-    .then((res) => res.json())
     .then(() => {
       createFamilies(person_uuid);
       say(
@@ -409,7 +423,7 @@ function slackUserCreate(name, email, say) {
         sendEmail(email_msg);
         say(`CHT demo account Email sent to ${to_email}!`);
       } else {
-        log("Invalid Email");
+        log(`Invalid Email: ${to_email}`);
       }
     })
     .catch(function (error) {
@@ -438,8 +452,26 @@ const app = new App({
       path: '/health-check',
       method: ['GET'],
       handler: (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('OK');
+        res
+          .writeHead(200, { 'Content-Type': 'text/plain' })
+          .end('OK');
+      },
+    },
+    {
+      path: '/cht-user-create-test/:test_secret',
+      method: ['POST'],
+      handler: (req, res) => {
+        if (req.params.test_secret === TEST_SECRET) {
+          log("Received test request" +  process.env.TEST_NAME + " - " +  process.env.TEST_EMAIL);
+          slackUserCreate(process.env.TEST_NAME, TEST_EMAIL, function(){});
+          res
+            .writeHead(200, { 'Content-Type': 'text/plain' })
+            .end(`Test user request sent`);
+        } else {
+          res
+            .writeHead(401, { 'Content-Type': 'text/plain' })
+            .end(`Unauthorized`);
+        }
       },
     },
   ],
@@ -507,4 +539,6 @@ app.command("/cht-user-create", async ({ command, ack, say }) => {
 (async () => {
   await app.start();
   log('⚡️ Bolt app is running!');
+  log(`Secret test URL - this changes every start:\n\n`
+      + `  curl -X POST http://localhost:4000/cht-user-create-test/${TEST_SECRET}\n`);
 })();
