@@ -262,6 +262,11 @@ function post(str_url, json_data, callback, callback_options) {
   request(options, json_data, callback, callback_options);
 }
 
+const cleanseUsername = (str) => {
+  // CHT usernames have a limited character set, strip out all but minimal set
+  return str.replaceAll(/[^a-zA-Z0-9]/g, '');
+};
+
 function request(options, data, callback, callback_options) {
   const req = https.request(options, function (res) {
     res.setEncoding("utf8");
@@ -361,9 +366,10 @@ function slackUserCreate(name, email, say) {
   const rand_end = Math.floor(Math.random() * (9999 - 1000) + 1000);
   const user_password = "Health" + rand_end;
 
+  const cleansedName = cleanseUsername(names[1]);
   const user_name = `${names[0]
     .substring(0, 1)
-    .toLowerCase()}${names[1].toLowerCase()}${rand_end}`;
+    .toLowerCase()}${cleansedName.toLowerCase()}${rand_end}`;
 
   const user_json = {
     username: user_name,
