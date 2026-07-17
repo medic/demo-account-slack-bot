@@ -13,6 +13,7 @@ const HOST = url.parse(RAW_HOST);
 const DB = url.resolve(url.format(HOST), "medic/");
 const API = url.resolve(url.format(HOST), "api/v1/");
 const nodemailer = require("nodemailer");
+const { email_body, email_subject } = require('./email.content');
 const TEST_SECRET = uuidv4();
 const TEST_EMAIL = `<mailto:${process.env.TEST_EMAIL}|${process.env.TEST_EMAIL}>`
 
@@ -387,14 +388,22 @@ function slackUserCreate(name, email, say) {
     email.lastIndexOf(":") + 1,
     email.lastIndexOf("|")
   );
-  const email_subject = "Your Community Health App Demo";
-  const email_body = `<div>Welcome to the Community Health Toolkit! To load your personal demo of a community health app built with our Core Framework, open the link below in Chrome or Firefox and enter your new username and password:</div><br><div>https://${process.env.MEDIC_INSTANCE} <br> username: ${user_name} <br> password: ${user_password}</div><br><div>It may take up to a minute for the app to load demo data, including sample families, people, history, and tasks. Once the tasks have populated, the app can run offline. Please note that the clinical protocols and guidance in the app are for demo purposes only. To explore tablet and mobile views, simply decrease the size of your browser window. </div><br><div><b>Join our community forum</b> at https://forum.communityhealthtoolkit.org/ to learn more about the CHT, ask us any questions, or tell us about your project!</div><br><div>Community Health Toolkit <br> www.communityhealthtoolkit.org</div><br>`;
 
+  const email_body_replaced = email_body.replaceAll(
+      "MEDIC_INSTANCE",
+      `${process.env.MEDIC_INSTANCE}`
+  ).replaceAll(
+      "USER_NAME",
+      `${user_name}`
+  ).replaceAll(
+      "USER_PASSWORD",
+      `${user_password}`
+  );
   const email_msg = {
     to: to_email,
     from: from_email,
     subject: email_subject,
-    html: email_body,
+    html: email_body_replaced,
   };
 
   const options = {
@@ -468,7 +477,7 @@ const app = new App({
       method: ['POST'],
       handler: (req, res) => {
         if (req.params.test_secret === TEST_SECRET) {
-          log("Received test request" +  process.env.TEST_NAME + " - " +  process.env.TEST_EMAIL);
+          log("Received test request " +  process.env.TEST_NAME + " - " +  process.env.TEST_EMAIL);
           slackUserCreate(process.env.TEST_NAME, TEST_EMAIL, function(){});
           res
             .writeHead(200, { 'Content-Type': 'text/plain' })

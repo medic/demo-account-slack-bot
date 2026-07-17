@@ -1,6 +1,6 @@
 {
   "name": "slack-bolt-sdk-cht-user-creator",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "A CHT user Creation bot using slack bolt ⚡️ SDK",
   "main": "index.js",
@@ -10,7 +10,7 @@
   "author": "Alex Nyika <nomulex@gmail.com>, mrjones@medic.org",
   "license": "MIT",
   "dependencies": {
-    "@slack/bolt": "^4.4.0",
+    "@slack/bolt": "^5.0.0",
     "bluebird": "^3.7.2",
     "https": "^1.0.0",
     "moment": "^2.30.1",
