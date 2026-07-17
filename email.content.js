@@ -2,7 +2,7 @@ const email_subject = "Your Community Health App Demo";
 const email_body = `
 <div>
     Welcome to the Community Health Toolkit! To view your personal demo of a community 
-    health app built with our 
+    health app built with the 
     <a href="https://docs.communityhealthtoolkit.org/technical-overview/architecture/cht-core/">Core Framework</a>, 
     use the information below. After your first login, you will have to change
     your password. (<b>Note</b>: the CHT only works in Chrome or Firefox and Safari doesn't work) 
