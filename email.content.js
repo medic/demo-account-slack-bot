@@ -31,7 +31,7 @@ const email_body = `
 </div>
 <br>
 <div>
-    <b>Join our <a href="https://forum.communityhealthtoolkit.org/">community forum</a></b> 
+    <b>Join the <a href="https://forum.communityhealthtoolkit.org/">community forum</a></b> 
     to learn more about the CHT, ask us any  questions, or tell us about your project!
 </div>
 <br>
