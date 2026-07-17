@@ -5,7 +5,7 @@ const email_body = `
     health app built with the 
     <a href="https://docs.communityhealthtoolkit.org/technical-overview/architecture/cht-core/">Core Framework</a>, 
     use the information below. After your first login, you will have to change
-    your password. (<b>Note</b>: the CHT only works in Chrome or Firefox and Safari doesn't work) 
+    your password. (<b>Note</b>: the CHT only works in Chrome or Firefox) 
 </div>
 <br>
 <div style="padding-left: 20px">
