@@ -32,7 +32,7 @@ const email_body = `
 <br>
 <div>
     <b>Join the <a href="https://forum.communityhealthtoolkit.org/">community forum</a></b> 
-    to learn more about the CHT, ask us any  questions, or tell us about your project!
+    to learn more about the CHT, ask any questions, or tell the community about your project!
 </div>
 <br>
 <div>
